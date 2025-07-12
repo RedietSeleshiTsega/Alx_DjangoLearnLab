@@ -1,6 +1,4 @@
-Here’s a shortened and more beginner-friendly version of your `README.md` for **LibraryProject**:
 
----
 
 # LibraryProject 📚
 
@@ -77,6 +75,6 @@ This is a simple Django project I’m building to learn how Django works. It’s
 
 ## 🤝 Contributing
 
-This is part of my repo: [Alx\_DjangoLearnLab](https://github.com/your-username/Alx_DjangoLearnLab)
+This is part of my repo: [Alx\_DjangoLearnLab](https://github.com/RedietSeleshiTsega/Alx_DjangoLearnLab)
 Feel free to fork it and try things out!
 
