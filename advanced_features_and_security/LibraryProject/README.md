@@ -78,3 +78,20 @@ This is a simple Django project I’m building to learn how Django works. It’s
 This is part of my repo: [Alx\_DjangoLearnLab](https://github.com/RedietSeleshiTsega/Alx_DjangoLearnLab)
 Feel free to fork it and try things out!
 
+
+# Permissions and Groups Setup
+
+## Groups Configuration
+- **Editors**: Assigned `can_create` and `can_edit` permissions for the Book model.
+- **Viewers**: Assigned `can_view` permission for the Book model.
+- **Admins**: Assigned all permissions (`can_view`, `can_create`, `can_edit`, `can_delete`).
+
+## Setup Instructions
+1. Create groups via Django Admin (`/admin/auth/group/`).
+2. Assign permissions to groups (e.g., `bookshelf.can_view`, `bookshelf.can_create`).
+3. Assign users to groups via Django Admin.
+4. Test permissions by logging in as different users and attempting to access views.
+
+## Testing
+- Create test users and assign them to different groups (e.g., Viewer, Editor).
+- Verify that users can only perform actions allowed by their group permissions.
