@@ -1,23 +1,28 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.views.generic.detail import DetailView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
-from django.views.generic.detail import DetailView
+from django.contrib.auth.decorators import (
+    login_required, permission_required, user_passes_test
+)
+from django.contrib.auth.views import LoginView, LogoutView
+
 from .models import Book, Library, UserProfile
 
-# Function-based view to list all books
+
 @login_required
 def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
-# Class-based view for library details
+
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# Auth views
+
 def login_view(request):
     form = AuthenticationForm(data=request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -33,13 +38,25 @@ def register_view(request):
     form = UserCreationForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        # Default role
         UserProfile.objects.create(user=user, role='Member')
         login(request, user)
         return redirect('list_books')
     return render(request, 'relationship_app/register.html', {'form': form})
 
-# Role-checks
+
+@permission_required('relationship_app.can_add_book')
+def add_book(request):
+    return HttpResponse("Add book page (restricted by permission)")
+
+@permission_required('relationship_app.can_change_book')
+def edit_book(request, book_id):
+    return HttpResponse(f"Edit book page for book ID {book_id} (restricted by permission)")
+
+@permission_required('relationship_app.can_delete_book')
+def delete_book(request, book_id):
+    return HttpResponse(f"Delete book page for book ID {book_id} (restricted by permission)")
+
+
 def is_admin(user): return user.userprofile.role == 'Admin'
 def is_librarian(user): return user.userprofile.role == 'Librarian'
 def is_member(user): return user.userprofile.role == 'Member'
