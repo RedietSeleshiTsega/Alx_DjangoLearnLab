@@ -3,25 +3,20 @@ from django.http import HttpResponse
 from django.views.generic.detail import DetailView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import (
-    login_required, permission_required, user_passes_test
-)
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.views import LoginView, LogoutView
 
 from .models import Book, Library, UserProfile
-
 
 @login_required
 def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
-
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
-
 
 def login_view(request):
     form = AuthenticationForm(data=request.POST or None)
@@ -43,7 +38,6 @@ def register_view(request):
         return redirect('list_books')
     return render(request, 'relationship_app/register.html', {'form': form})
 
-
 @permission_required('relationship_app.can_add_book')
 def add_book(request):
     return HttpResponse("Add book page (restricted by permission)")
@@ -56,10 +50,14 @@ def edit_book(request, book_id):
 def delete_book(request, book_id):
     return HttpResponse(f"Delete book page for book ID {book_id} (restricted by permission)")
 
+def is_admin(user):
+    return user.userprofile.role == 'Admin'
 
-def is_admin(user): return user.userprofile.role == 'Admin'
-def is_librarian(user): return user.userprofile.role == 'Librarian'
-def is_member(user): return user.userprofile.role == 'Member'
+def is_librarian(user):
+    return user.userprofile.role == 'Librarian'
+
+def is_member(user):
+    return user.userprofile.role == 'Member'
 
 @user_passes_test(is_admin)
 def admin_view(request):
