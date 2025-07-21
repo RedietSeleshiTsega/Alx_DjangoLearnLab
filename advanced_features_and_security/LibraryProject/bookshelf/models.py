@@ -7,7 +7,20 @@ from django.utils.translation import gettext_lazy as _
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
-    publication_year = models.IntegerField()
+    published_date = models.DateField()
+    isbn = models.CharField(max_length=13, unique=True)
+    added_by = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
+
+    class Meta:
+        permissions = [
+            ('can_view', 'Can view book'),
+            ('can_create', 'Can create book'),
+            ('can_edit', 'Can edit book'),
+            ('can_delete', 'Can delete book'),
+        ]
+
+    def __str__(self):
+        return self.title
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
