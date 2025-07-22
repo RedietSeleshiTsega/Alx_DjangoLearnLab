@@ -1,20 +1,17 @@
-"""
-Django settings for LibraryProject project.
-"""
 
 import os
 from pathlib import Path
 
-.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'your-secret-key-here' 
+SECRET_KEY = 'your-secret-key-here'
 
 
-DEBUG = False 
+DEBUG = False
 
-ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']  
+ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']
 
 
 INSTALLED_APPS = [
@@ -24,8 +21,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bookshelf', 
-    'csp',  
+    'bookshelf',  
+    'csp', 
 ]
 
 MIDDLEWARE = [
