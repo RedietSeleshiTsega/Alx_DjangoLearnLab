@@ -9,6 +9,7 @@ from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import BookFilter
+from django_filters import rest_framework
 
 class BookListView(generics.ListAPIView):
     """List all books (GET)"""
