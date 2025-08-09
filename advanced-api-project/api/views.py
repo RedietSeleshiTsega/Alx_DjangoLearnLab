@@ -1,4 +1,10 @@
-from rest_framework import generics, permissions
+from rest_framework import generics
+from rest_framework.permissions import ( 
+    AllowAny,
+    IsAuthenticated,
+    IsAdminUser,
+    IsAuthenticatedOrReadOnly
+)
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
 
@@ -6,34 +12,31 @@ class BookListView(generics.ListAPIView):
     """List all books (GET)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]  
+    permission_classes = [AllowAny] 
 
 class BookDetailView(generics.RetrieveAPIView):
     """Retrieve single book (GET)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
 class BookCreateView(generics.CreateAPIView):
     """Create new book (POST)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated] 
+    permission_classes = [IsAuthenticated] 
     def perform_create(self, serializer):
         """Custom book creation logic"""
-        if self.request.user.is_authenticated:
-            serializer.save(created_by=self.request.user)
-        else:
-            serializer.save()
+        serializer.save(created_by=self.request.user)
 
 class BookUpdateView(generics.UpdateAPIView):
     """Update existing book (PUT/PATCH)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]  
 
 class BookDeleteView(generics.DestroyAPIView):
     """Delete book (DELETE)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAdminUser]  # Only admin can delete
+    permission_classes = [IsAdminUser]  
