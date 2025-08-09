@@ -19,6 +19,12 @@ class BookCreateView(generics.CreateAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated] 
+    def perform_create(self, serializer):
+        """Custom book creation logic"""
+        if self.request.user.is_authenticated:
+            serializer.save(created_by=self.request.user)
+        else:
+            serializer.save()
 
 class BookUpdateView(generics.UpdateAPIView):
     """Update existing book (PUT/PATCH)"""
