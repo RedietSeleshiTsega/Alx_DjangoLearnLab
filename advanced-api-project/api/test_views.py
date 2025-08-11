@@ -26,7 +26,7 @@ class BookAPITests(APITestCase):
             author=self.author2
         )
 
-        self.list_url = reverse("book-list") 
+        self.list_url = reverse("book-list")   
         self.detail_url = lambda pk: reverse("book-detail", args=[pk]) 
 
     def test_list_books(self):
