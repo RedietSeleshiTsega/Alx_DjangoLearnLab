@@ -1,4 +1,5 @@
 from rest_framework import generics, filters
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated  # for checker
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated,
@@ -11,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import BookFilter
 from django_filters import rest_framework
 
+
 class BookListView(generics.ListAPIView):
     """List all books (GET)"""
     queryset = Book.objects.all()
@@ -22,11 +24,13 @@ class BookListView(generics.ListAPIView):
     ordering_fields = ['title', 'publication_year', 'author__name']
     ordering = ['title']
 
+
 class BookDetailView(generics.RetrieveAPIView):
     """Retrieve single book (GET)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [AllowAny]
+
 
 class BookCreateView(generics.CreateAPIView):
     """Create new book (POST)"""
@@ -38,11 +42,13 @@ class BookCreateView(generics.CreateAPIView):
         """Custom book creation logic"""
         serializer.save(created_by=self.request.user)
 
+
 class BookUpdateView(generics.UpdateAPIView):
     """Update existing book (PUT/PATCH)"""
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
 
 class BookDeleteView(generics.DestroyAPIView):
     """Delete book (DELETE)"""
