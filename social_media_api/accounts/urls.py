@@ -5,9 +5,10 @@ urlpatterns = [
     path('register/', views.register_user, name='register'),
     path('login/', views.user_login, name='login'),
     path('profile/', views.user_profile, name='profile'),
-    path('follow/', views.follow_user, name='follow'),
-    path('unfollow/', views.unfollow_user, name='unfollow'),
-    path('following/', views.following_list, name='following-list'),
-    path('followers/', views.followers_list, name='followers-list'),
-    path('user/<int:user_id>/', views.user_profile_detail, name='user-profile-detail'),
+
+    path('follow/', views.FollowUserView.as_view(), name='follow'),
+    path('unfollow/', views.UnfollowUserView.as_view(), name='unfollow'),
+    path('following/', views.FollowingListView.as_view(), name='following-list'),
+    path('followers/', views.FollowersListView.as_view(), name='followers-list'),
+    path('user/<int:user_id>/', views.UserProfileDetailView.as_view(), name='user-profile-detail'),
 ]
