@@ -4,7 +4,16 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import login
 from django.shortcuts import get_object_or_404
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, UserFollowSerializer, FollowActionSerializer
+from django.contrib.contenttypes.models import ContentType
+from notifications.models import Notification
+
+from .serializers import (
+    UserRegistrationSerializer, 
+    UserLoginSerializer, 
+    UserProfileSerializer, 
+    UserFollowSerializer, 
+    FollowActionSerializer
+)
 from .models import CustomUser
 
 
@@ -22,6 +31,7 @@ def register_user(request):
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny]) 
 def user_login(request):
@@ -35,6 +45,7 @@ def user_login(request):
             'username': user.username
         }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT'])
 @permission_classes([permissions.IsAuthenticated])  
@@ -50,6 +61,7 @@ def user_profile(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = FollowActionSerializer
@@ -61,6 +73,13 @@ class FollowUserView(generics.GenericAPIView):
             user_to_follow = get_object_or_404(CustomUser.objects.all(), id=user_id)
             
             if request.user.follow(user_to_follow):
+              
+                Notification.objects.create(
+                    recipient=user_to_follow,
+                    actor=request.user,
+                    verb="started following you",
+                    target=user_to_follow  
+                )
                 return Response({
                     'status': 'success',
                     'message': f'You are now following {user_to_follow.username}'
@@ -72,6 +91,7 @@ class FollowUserView(generics.GenericAPIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UnfollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]  
@@ -96,6 +116,8 @@ class UnfollowUserView(generics.GenericAPIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 class FollowingListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = UserFollowSerializer
@@ -105,6 +127,7 @@ class FollowingListView(generics.GenericAPIView):
         serializer = self.get_serializer(following, many=True, context={'request': request})
         return Response(serializer.data)
 
+
 class FollowersListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = UserFollowSerializer
@@ -113,6 +136,8 @@ class FollowersListView(generics.GenericAPIView):
         followers = request.user.followers.all()
         serializer = self.get_serializer(followers, many=True, context={'request': request})
         return Response(serializer.data)
+
+
 
 class UserProfileDetailView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]  
