@@ -1,8 +1,7 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from django.contrib.contenttypes.models import ContentType
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer
@@ -35,7 +34,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
-        post = get_object_or_404(Post, pk=pk)
+        post = generics.get_object_or_404(Post, pk=pk)
         like, created = Like.objects.get_or_create(user=request.user, post=post)
 
         if created:
@@ -52,7 +51,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def unlike(self, request, pk=None):
-        post = get_object_or_404(Post, pk=pk)
+        post = generics.get_object_or_404(Post, pk=pk)
         like = Like.objects.filter(user=request.user, post=post)
         if like.exists():
             like.delete()
@@ -61,7 +60,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def likes(self, request, pk=None):
-        post = self.get_object()
+        post = generics.get_object_or_404(Post, pk=pk)
         likes = post.likes.all()
         page = self.paginate_queryset(likes)
         if page is not None:
@@ -93,7 +92,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         if post_id:
             queryset = queryset.filter(post_id=post_id)
         return queryset
-
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
