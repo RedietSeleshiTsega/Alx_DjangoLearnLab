@@ -1,28 +1,27 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from rest_framework import viewsets, permissions, filters, generics, status
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer
 from .permissions import IsOwnerOrReadOnly
 from notifications.models import Notification
 
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'content']
     ordering_fields = ['created_at', 'updated_at']
     ordering = ['-created_at']
-    
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-    
+
     @action(detail=True, methods=['get'])
     def comments(self, request, pk=None):
         post = self.get_object()
@@ -31,18 +30,14 @@ class PostViewSet(viewsets.ModelViewSet):
         if page is not None:
             serializer = CommentSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def like(self, request, pk=None):
-        post = self.get_object()
-        like, created = Like.objects.get_or_create(
-            user=request.user,
-            post=post
-        )
-        
+        post = get_object_or_404(Post, pk=pk)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+
         if created:
             if post.author != request.user:
                 Notification.objects.create(
@@ -52,20 +47,18 @@ class PostViewSet(viewsets.ModelViewSet):
                     content_type=ContentType.objects.get_for_model(post),
                     object_id=post.id
                 )
-            
-            return Response({'status': 'post liked'}, status=status.HTTP_201_CREATED)
-        return Response({'status': 'post already liked'}, status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response({'status': 'success', 'message': 'Post liked'}, status=status.HTTP_201_CREATED)
+        return Response({'status': 'info', 'message': 'You already liked this post'}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'])
     def unlike(self, request, pk=None):
-        post = self.get_object()
-        try:
-            like = Like.objects.get(user=request.user, post=post)
+        post = get_object_or_404(Post, pk=pk)
+        like = Like.objects.filter(user=request.user, post=post)
+        if like.exists():
             like.delete()
-            return Response({'status': 'post unliked'}, status=status.HTTP_200_OK)
-        except Like.DoesNotExist:
-            return Response({'status': 'post not liked'}, status=status.HTTP_400_BAD_REQUEST)
-    
+            return Response({'status': 'success', 'message': 'Post unliked'}, status=status.HTTP_200_OK)
+        return Response({'status': 'error', 'message': 'You have not liked this post'}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def likes(self, request, pk=None):
         post = self.get_object()
@@ -74,18 +67,17 @@ class PostViewSet(viewsets.ModelViewSet):
         if page is not None:
             serializer = LikeSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
         serializer = LikeSerializer(likes, many=True)
         return Response(serializer.data)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    
+
     def perform_create(self, serializer):
         comment = serializer.save(author=self.request.user)
-   
         if comment.post.author != self.request.user:
             Notification.objects.create(
                 recipient=comment.post.author,
@@ -94,23 +86,24 @@ class CommentViewSet(viewsets.ModelViewSet):
                 content_type=ContentType.objects.get_for_model(comment.post),
                 object_id=comment.post.id
             )
-    
+
     def get_queryset(self):
         queryset = Comment.objects.all()
-        post_id = self.request.query_params.get('post', None)
-        if post_id is not None:
+        post_id = self.request.query_params.get('post')
+        if post_id:
             queryset = queryset.filter(post_id=post_id)
         return queryset
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_feed(request):
     following_users = request.user.following.all()
     posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
-    
+
     page = request.query_params.get('page', 1)
     page_size = request.query_params.get('page_size', 10)
-    
+
     paginator = Paginator(posts, page_size)
     try:
         paginated_posts = paginator.page(page)
@@ -118,9 +111,8 @@ def user_feed(request):
         paginated_posts = paginator.page(1)
     except EmptyPage:
         paginated_posts = paginator.page(paginator.num_pages)
-    
+
     serializer = PostSerializer(paginated_posts, many=True, context={'request': request})
-    
     return Response({
         'count': paginator.count,
         'pages': paginator.num_pages,
