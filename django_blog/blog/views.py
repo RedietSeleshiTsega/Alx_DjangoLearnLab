@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from .models import Post
 from .models import Comment
 from .forms import CommentForm
+from django.shortcuts import render, redirect, get_object_or_404
 
 
 def register_view(request):
