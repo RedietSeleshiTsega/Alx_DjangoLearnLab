@@ -19,7 +19,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data.pop('password2')
-        # Use get_user_model().objects.create_user as expected by checker
+
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
@@ -27,7 +27,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             bio=validated_data.get('bio', ''),
             profile_picture=validated_data.get('profile_picture', None)
         )
-        # Create token as expected by checker
+
         Token.objects.create(user=user)
         return user
 
@@ -68,3 +68,30 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     def get_following_count(self, obj):
         return obj.following_count()
+    
+
+class UserFollowSerializer(serializers.ModelSerializer):
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'bio', 'profile_picture', 
+                 'followers_count', 'following_count', 'is_following')
+        read_only_fields = ('id', 'username')
+    
+    def get_followers_count(self, obj):
+        return obj.followers_count()
+    
+    def get_following_count(self, obj):
+        return obj.following_count()
+    
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user.is_following(obj)
+        return False
+
+class FollowActionSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
