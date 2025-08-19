@@ -10,7 +10,8 @@ from .models import Post
 from .models import Comment
 from .forms import CommentForm
 from django.shortcuts import render, redirect, get_object_or_404
-
+from django.db.models import Q
+from .models import Post, Tag
 
 def register_view(request):
     if request.method == "POST":
@@ -162,3 +163,27 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         comment = self.get_object()
         return self.request.user == comment.author
+    
+
+class SearchResultsView(ListView):
+    model = Post
+    template_name = "blog/search_results.html"
+    context_object_name = "posts"
+
+    def get_queryset(self):
+        query = self.request.GET.get("q")
+        return Post.objects.filter(
+            Q(title__icontains=query) |
+            Q(content__icontains=query) |
+            Q(tags__name__icontains=query)
+        ).distinct()
+
+
+class TagPostListView(ListView):
+    model = Post
+    template_name = "blog/tag_posts.html"
+    context_object_name = "posts"
+
+    def get_queryset(self):
+        tag_name = self.kwargs.get("tag_name")
+        return Post.objects.filter(tags__name=tag_name)
